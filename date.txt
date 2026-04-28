@@ -1,0 +1,3 @@
+dialog = dialog/dialog1.txt
+
+fon = img/fon/fon1.png
