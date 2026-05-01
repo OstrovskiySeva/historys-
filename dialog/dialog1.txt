@@ -1,0 +1,89 @@
+TEXT 1
+scena dialod
+hero anna,hero1.png,left
+name Друг
+Привет друг. Как дела?
+END
+
+TEXT 2
+scena dialod
+name Друг
+Почему молчишь а?
+END
+
+TEXT 3
+scena dialod
+name Друг
+Давай с тобой поговорим.
+Мы же давно не виделись
+END
+
+TEXT 4
+scena dialod
+name Автор
+Ладно давай только в парк пройдемся
+END
+
+TEXT 5
+scena dialod
+hero anna,hero1.png,right
+name Друг
+fon fon2.png
+Вот и в парке
+END
+
+TEXT 6
+scena dialod
+hero anna,hero1.png,top
+name Автор
+Сейчас я позвоню Маше чтобы он тоже сюда подходил
+sound telefon.mp3
+END
+
+TEXT 7
+scena dialod
+hero masha,masha.png,left
+name Маша
+Привет вы звали меня я вот пришла
+END
+
+TEXT 8
+scena dialod
+hero anna,hero1.png,top
+name Друг
+Ну зачем ты ее позвал я с ней не буду гулять
+END
+
+TEXT 9
+scena dialod
+hero masha,masha.png,left
+name Маша
+Я тоже тебе не рада. Так что выбирай с кем пойдешь гулять.
+END
+
+TEXT 10
+scena choice
+go TEXT ,Я выбираю Друга
+go SHE ,Лучше с Машей
+END
+
+TEXT 11
+scena dialod
+hero anna,hero1.png,top
+name Друг
+Правильный выбор бро
+END
+
+SHE 11
+scena dialod
+hero masha,masha.png,left
+name Маша
+Я так и подумала что ты пойдешь со мной
+END
+
+TEXT 12
+scena dialod
+name Маша
+Привет вы звали меня я вот пришла
+exit
+END
