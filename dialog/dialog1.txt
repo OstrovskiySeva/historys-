@@ -74,16 +74,36 @@ name Друг
 Правильный выбор бро
 END
 
-SHE 11
+SHE 1
 scena dialod
-hero masha,masha.png,left
 name Маша
 Я так и подумала что ты пойдешь со мной
 END
 
+SHE 2
+scena dialod
+hero masha,masha.png,left
+fon fon2.png
+name Маша
+Давай в соседняя кофе сходим и поседим
+END
+
+SHE 3
+scena dialod
+name Автор
+Ладно пошли
+exit
+END
+
 TEXT 12
 scena dialod
-name Маша
-Привет вы звали меня я вот пришла
+name Друг
+Ладно пошди ко мне домой в комп поиграем
+END
+
+TEXT 13
+scena dialod
+name Друг
+Извени позже
 exit
 END
