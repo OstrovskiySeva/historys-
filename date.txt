@@ -1,3 +1,8 @@
 dialog = dialog/dialog1.txt
 
-fon = img/fon/fon1.png
+fon = fon1.png
+
+music = music/fon1.mp3
+music = music/fon2.mp3
+
+color_text = 255,255,255
