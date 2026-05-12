@@ -1,7 +1,11 @@
 import pygame 
 import init
+import heros
+import anima
 import os
 from copy import *
+from config import *
+import time
 
 pygame.init()
 
@@ -9,59 +13,10 @@ info_display = pygame.display.Info()
 
 WIDTH = info_display.current_w
 HEIGHT = info_display.current_h
-running = True
 
-dialog_line = "TEXT "
-dialog_lines = [dialog_line]
+FILENAME = init.files()
 
-print_text = ""
-num_text = 1
 old_fon = init.FONFILE
-
-buttons_rect = []
-heros_list = []
-
-class Hero:
-        def __init__(self, name, place):
-                self.name = name
-                self.place = place
-
-        def place_move(self, num_text, texts):
-                if int(num_text-1) < len(texts):
-                        text_copy = texts[int(num_text-1)]
-                        place = text_copy["hero"][2]
-                        place = place[0 : len(place)-1]
-                        self.place = place
-
-        def pos_place(self, place):
-                if place == "left":
-                        x = 50
-                        y = HEIGHT*0.55-400
-                elif place == "top":
-                        x = WIDTH*0.4
-                        y = HEIGHT*0.55-400
-                elif place == "right":
-                        x = WIDTH*0.6
-                        y = HEIGHT*0.55-400
-                return x, y
-
-        def filehero(self, num_text, texts):
-              if int(num_text-1) < len(texts):
-                text_copy = texts[int(num_text-1)]
-                anim = text_copy["hero"][1]
-                return anim
-        
-        def image_hero(self, image):
-                file_img = "img/hero/" + str(self.name) + "/" + str(image)
-                img_hero = init.hero_init(file_img)
-                return img_hero
-
-        def draw_hero(self, screen, num_text, texts):
-                image = self.filehero(num_text, texts)
-                img_hero = self.image_hero(image)
-                img_hero = pygame.transform.smoothscale(img_hero, (300, 500))
-                x, y = self.pos_place(self.place)
-                return img_hero, x, y
 
 music_end_event = pygame.USEREVENT
 pygame.mixer.music.set_endevent(music_end_event)
@@ -82,6 +37,15 @@ def fon_import(num_text, fon, texts):
                         return fon[0 : len(fon)-1]
                 else:
                         return old_fon
+
+def anim_fon_imp(num_text, fon, texts):
+        if int(num_text-1) < len(texts):
+                text_copy = texts[int(num_text-1)]
+                if text_copy["anim_fon"]:
+                        anim_fons = text_copy["anim_fon"][0]
+                        anim_fons = anim_fons[0 : len(anim_fons)-1]
+                        animation_fon = anima.Anim_fon(anim_fons)
+                        return animation_fon
 
 def names_text(num_text, texts):
     if int(num_text-1) < len(texts):
@@ -119,16 +83,22 @@ def scenas(num_text, texts):
                 name = text_copy["scena"][0]
                 return name[0: len(name)-1]
 
-def play_sound(num_text, texts):
+def play_sound(num_text, texts, sound_text):
         if int(num_text-1) < len(texts):
                 text_copy = texts[int(num_text-1)]
                 if len(text_copy["sound"]) > 0:
                         sound = text_copy["sound"][0]
                         sound = sound[0 : len(sound)-1]
                         file_sound = "music/sound/" + str(sound)
-                        pygame.mixer.music.load(file_sound)
-                        pygame.mixer.music.set_volume(0.8)
-                        pygame.mixer.music.play()
+                        sound_text = pygame.mixer.Sound(file_sound)
+                        sound_text.play(0)
+                        pygame.mixer.music.set_volume(0.4)
+                        return sound_text
+
+def stop_sound(num_text, texts, sound_text):
+        pygame.mixer.music.set_volume(0.8)
+        sound_text.stop()
+        return None
 
 def exits(texts, num_text):
         global running
@@ -146,25 +116,34 @@ def find_hero(name):
                         return hero
         return None
 
+def dialogis(name_text):
+        x = ()
+        for i in range(0, len(dialog_lines)):
+                if dialog_lines[i] !=  name_text:
+                        x1 = x + (dialog_lines[i],)
+                        x = x1
+        return x
+
 def init_text():
         name_text = dialog_line
         heroes_data = {}
-        with open (init.FILENAME) as file:
+        with open (FILENAME) as file:
             texts = []
             a = False
             for line in file:
                 if line:
+                    new_dia_line = dialogis(name_text)
                     if line.startswith(dialog_line):
-                        text = {"name": [], "lines": [], "otvet": [], "fon": [], "hero": [], "exit": [], "sound": [], "scena": [], "go": []}
+                        text = {"name": [], "lines": [], "otvet": [], "fon": [], "hero": [], "exit": [], "sound": [], "scena": [], "go": [], "anim_fon": []}
                         a = True
-                    elif line.startswith("SHE "):
+                    elif line.startswith(new_dia_line):
                         a = False
                     elif line.startswith("name ") and a:
                         name = line[5 : ]
                         text["name"].append(name)
                     elif line.startswith("END") and a:
                         texts.append(text)
-                        text = {"name": [], "lines": [], "otvet": [], "fon": [], "hero": [], "exit": [], "sound": [], "scena": [], "go": []}
+                        text = {"name": [], "lines": [], "otvet": [], "fon": [], "hero": [], "exit": [], "sound": [], "scena": [], "go": [], "anim_fon": []}
                         a = True
                     elif line.startswith("exit"):
                         text["exit"].append(line)
@@ -178,6 +157,8 @@ def init_text():
                                 heroes_data[hero_name] = place.strip()
                     elif line.startswith("fon") and a:
                         text["fon"].append(line[4:])
+                    elif line.startswith("anim_fon") and a:
+                        text["anim_fon"].append(line[9:])
                     elif line.startswith("sound") and a:
                         text["sound"].append(line[6:])
                     elif line.startswith("scena") and a:
@@ -193,7 +174,7 @@ def init_text():
 
         for hero_name, hero_place in heroes_data.items():
                 if not find_hero(hero_name):
-                        new_hero = Hero(hero_name, hero_place)
+                        new_hero = heros.Hero(hero_name, hero_place)
                         heros_list.append(new_hero)
                 
         return texts
@@ -243,13 +224,33 @@ def draw_dealog(texts, screen, num_text, color_text, scena):
                                 screen.blit(pusmo, (WIDTH*0.01+10, HEIGHT*0.01+10+40*i))
 
 def dialogs(screen):
+    global time_anim_fon, num_anim 
+    color = pygame.Color(int(init.hero_color[heros.name][0]), int(init.hero_color[heros.name][1]), int(init.hero_color[heros.name][2]))
     name_surface = pygame.Surface((WIDTH*0.25, 50))     
     name_surface.set_alpha(135)
+    name_surface.fill((color))
     text_surface = pygame.Surface((WIDTH*0.97, 300))
     text_surface.set_alpha(125)
+    text_surface.fill((color))
     color_text = pygame.Color(int(init.color_texts[0]), int(init.color_texts[1]), int(init.color_texts[2]))
-            
-    screen.blit(fon, (0, 0))
+    
+    if animation_fon:
+            new_time = time.time()
+            if new_time - time_anim_fon >= 0.2:
+                    fon_anim = animation_fon.draw_fon(num_anim)
+                    if num_anim < len(animation_fon.an)-1:
+                            num_anim += 1
+                    else:
+                            num_anim = 0
+                    fon_anim = pygame.transform.smoothscale(fon_anim, (WIDTH, HEIGHT))
+                    screen.blit(fon_anim, (0, 0))
+                    time_anim_fon = time.time()
+            else:
+                    fon_anim = animation_fon.draw_fon(num_anim)
+                    fon_anim = pygame.transform.smoothscale(fon_anim, (WIDTH, HEIGHT))
+                    screen.blit(fon_anim, (0, 0))
+    else:
+            screen.blit(fon, (0, 0))
 
     screen.blit(img_hero, (x, y))
     
@@ -262,10 +263,12 @@ def dialogs(screen):
     draw_dealog(texts, screen, num_text, color_text, scena)
 
 def draws_infa(screen):
+    color = pygame.Color(int(init.hero_color[heros.name][0]), int(init.hero_color[heros.name][1]), int(init.hero_color[heros.name][2]))
     screen.blit(fon, (0, 0))
         
     text_surface = pygame.Surface((WIDTH*0.98, HEIGHT*0.98))
     text_surface.set_alpha(200)
+    text_surface.fill((color))
     color_text = pygame.Color(int(init.color_texts[0]), int(init.color_texts[1]), int(init.color_texts[2]))
     screen.blit(text_surface, (WIDTH*0.01, HEIGHT*0.01))
 
@@ -296,7 +299,7 @@ print_text = copy_text(num_text, texts)
 name, place = creat_hero(num_text, texts)
 heros = find_hero(name)
 if not heros:
-        heros = Hero(name, place)
+        heros = heros.Hero(name, place)
         heros_list.append(heros)
 
 img_hero, x, y = heros.draw_hero(screen, num_text, texts)
@@ -321,11 +324,14 @@ while running:
                         exits(texts, num_text)
                         scena = scenas(num_text, texts)
                         if len(texts[num_text-1]['sound']) != 0:
-                                play_sound(num_text, texts)
+                                sound_text = play_sound(num_text, texts, sound_text)
+                        elif sound_text != None:
+                                sound_text = stop_sound(num_text, texts, sound_text)
                         if scena == "dialod":
                                 name_text = names_text(num_text, texts)
                                 filefon = fon_import(num_text, fon, texts)
                                 fon = init.fons(filefon)
+                                animation_fon = anim_fon_imp(num_text, fon, texts)
                                 if bool_hero(num_text, texts):
                                         name, place = creat_hero(num_text, texts)
                                         heros = find_hero(name)
@@ -334,24 +340,28 @@ while running:
                                                 img_hero, x, y = heros.draw_hero(screen, num_text, texts)
                 elif scena == "choice":
                         var = btn_click(event)
-                        old_dialog_line = dialog_line
-                        dialog_line = var_dialog(var, num_text, texts)
-                        if not dialog_line in dialog_lines:
-                                dialog_lines.append(dialog_line)
-                        num_text = int(num_text) + int(1)
-                        if old_dialog_line != dialog_line:
-                                num_text = 1
-                        texts = init_text()
-                        scena = scenas(num_text, texts)
-                        name_text = names_text(num_text, texts)
-                        if bool_hero(num_text, texts):
-                                        name, place = creat_hero(num_text, texts)
-                                        heros = find_hero(name)
-                                        if heros:
-                                                heros.place_move(num_text, texts)
-                                                img_hero, x, y = heros.draw_hero(screen, num_text, texts)
+                        if type(var) == int:
+                                old_dialog_line = dialog_line
+                                dialog_line = var_dialog(var, num_text, texts)
+                                if not dialog_line in dialog_lines:
+                                        dialog_lines.append(dialog_line)
+                                num_text = int(num_text) + int(1)
+                                if old_dialog_line != dialog_line:
+                                        num_text = 1
+                                texts = init_text()
+                                scena = scenas(num_text, texts)
+                                name_text = names_text(num_text, texts)
+                                if bool_hero(num_text, texts):
+                                                name, place = creat_hero(num_text, texts)
+                                                heros = find_hero(name)
+                                                if heros:
+                                                        heros.place_move(num_text, texts)
+                                                        img_hero, x, y = heros.draw_hero(screen, num_text, texts)
                 elif scena == "infa":
-                        pass
+                        num_text = int(num_text) + int(1)
+                        texts = init_text()
+                        exits(texts, num_text)
+                        scena = scenas(num_text, texts)
         elif event.type == music_end_event:
                 pygame.mixer.music.load(init.musics[music_index])
                 pygame.mixer.music.set_volume(0.8)
